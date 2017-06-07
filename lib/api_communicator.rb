@@ -4,12 +4,21 @@ require 'pry-byebug'
 
 def get_character_movies_from_api(character)
   #make the web request
-  all_characters = RestClient.get('http://www.swapi.co/api/people/')
-  character_hash = JSON.parse(all_characters)
-  new_all_characters = character_hash["results"].each_with_object({}) do | temp_character, hsh|
-    hsh[temp_character["name"].downcase] = temp_character["films"]
-  end
-  new_all_characters[character]
+  next_website = 'http://www.swapi.co/api/people/'
+  main_all_characters = {}
+  begin
+    all_characters = RestClient.get(next_website)
+    character_hash = JSON.parse(all_characters)
+    new_all_characters = character_hash["results"].each_with_object({}) do | temp_character, hsh|
+      hsh[temp_character["name"].downcase] = temp_character["films"]
+    end
+    main_all_characters.merge!(new_all_characters)
+    next_website = character_hash["next"]
+  end while !next_website.nil?
+
+
+
+  main_all_characters[character]
   # iterate over the character hash to find the collection of `films` for the given
   #   `character`
   # collect those film API urls, make a web request to each URL to get the info
